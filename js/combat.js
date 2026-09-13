@@ -371,26 +371,19 @@ function doEnemyBasicAttack() {
    DAMAGE CALCULATIONS
    ══════════════════════════════════════════════════════════════════════════ */
 
-function rollPlayerAttack() {
+export function rollPlayerAttack() {
   const weapon = getItem(STATE.equippedWeapon);
-  let baseDmg;
+  let baseDmg = 8; // Normal hit damage
 
-  if (weapon && weapon.damage) {
-    const [min, max] = weapon.damage;
-    baseDmg = min + Math.floor(Math.random() * (max - min + 1));
-  } else {
-    baseDmg = STATE.player.attack;
+  if (weapon && weapon.damage && weapon.id !== 'rusted_sword') {
+    const [min, max] = Array.isArray(weapon.damage) ? weapon.damage : [weapon.damage, weapon.damage];
+    const avg = Math.floor((min + max) / 2);
+    if (avg > 8) baseDmg = avg;
   }
-
-  baseDmg += Math.floor(STATE.player.attack * 0.3);
 
   // Critical hit (10% base chance)
   const isCrit = Math.random() < 0.1;
-  if (isCrit) baseDmg = Math.floor(baseDmg * 1.8);
-
-  // Defense reduction
-  const effectiveDef = Math.max(0, (_enemy.defense + _enemy.tempDefense));
-  const damage = Math.max(1, baseDmg - effectiveDef);
+  const damage = isCrit ? Math.floor(baseDmg * 1.8) : baseDmg;
 
   return { damage, isCrit };
 }

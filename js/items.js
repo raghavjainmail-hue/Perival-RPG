@@ -14,7 +14,7 @@ export const ITEMS = {
     name:    'Rusted Sword',
     type:    'weapon',
     icon:    '⚔️',
-    damage:  [6, 10],       // [min, max]
+    damage:  [8, 8],       // [min, max]
     speed:   7,
     rarity:  'common',
     effect:  null,
