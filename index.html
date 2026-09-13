@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PERIVAL: THE ASHEN KEEP</title>
+
+  <!-- Atmospheric typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════
+       OUTER BLACK FRAME — gives the "arcade cabinet" feel
+       ══════════════════════════════════════════════ -->
+  <div id="outer-frame">
+
+    <!-- ──────────────────────────────────────────
+         GAME WRAPPER — the actual RPG screen
+         ────────────────────────────────────────── -->
+    <div id="game-wrapper">
+
+      <!-- ═══════════════════════════════
+           TOP HUD BAR
+           ═══════════════════════════════ -->
+      <header id="hud">
+        <div id="hud-title">
+          <span class="title-perival">PERIVAL</span>
+          <span class="title-subtitle">THE ASHEN KEEP</span>
+        </div>
+
+        <div id="hud-stats">
+          <!-- HP Block -->
+          <div class="stat-block" id="stat-hp">
+            <div class="stat-label">HP</div>
+            <div class="hp-bar-wrap">
+              <div id="hp-bar-fill" class="hp-bar-fill"></div>
+              <div id="hp-bar-glow" class="hp-bar-glow"></div>
+            </div>
+            <div class="stat-value"><span id="hp-current">100</span> / <span id="hp-max">100</span></div>
+          </div>
+
+          <!-- Stamina Block -->
+          <div class="stat-block" id="stat-stamina">
+            <div class="stat-label">STAMINA</div>
+            <div class="stamina-bar-wrap">
+              <div id="stamina-bar-fill" class="stamina-bar-fill"></div>
+            </div>
+            <div class="stat-value"><span id="stamina-current">100</span> / <span id="stamina-max">100</span></div>
+          </div>
+
+          <!-- Gold & Level -->
+          <div id="hud-meta">
+            <div class="hud-meta-row">
+              <span class="meta-icon">◈</span>
+              <span id="hud-gold">0</span>
+              <span class="meta-label">GOLD</span>
+            </div>
+            <div class="hud-meta-row">
+              <span class="meta-icon">⚔</span>
+              <span id="hud-level">1</span>
+              <span class="meta-label">LEVEL</span>
+            </div>
+          </div>
+
+          <!-- Current weapon -->
+          <div id="hud-weapon">
+            <div class="stat-label">EQUIPPED</div>
+            <div id="hud-weapon-name">—</div>
+          </div>
+        </div>
+
+        <!-- Save / Load / New buttons in HUD corner -->
+        <div id="hud-actions">
+          <button class="hud-btn" id="btn-save" title="Save game">SAVE</button>
+          <button class="hud-btn" id="btn-load" title="Load game">LOAD</button>
+          <button class="hud-btn" id="btn-new"  title="New game">NEW</button>
+        </div>
+      </header>
+
+      <!-- ═══════════════════════════════
+           MAIN SCENE VIEWPORT
+           ═══════════════════════════════ -->
+      <main id="scene-viewport">
+
+        <!-- Atmospheric background layer (CSS + particles) -->
+        <div id="scene-bg" class="scene-bg scene-forest"></div>
+
+        <!-- Fog / atmosphere overlay -->
+        <div id="scene-fog" class="scene-fog"></div>
+
+        <!-- Floating particles (lantern sparks, etc.) -->
+        <canvas id="particle-canvas"></canvas>
+
+        <!-- Location label -->
+        <div id="location-label">
+          <span id="location-text">The Ashen Forest</span>
+        </div>
+
+        <!-- ───────────────────────────────────
+             GAME TEXT PANEL — story + dialogue
+             ─────────────────────────────────── -->
+        <div id="text-panel">
+          <div id="text-content"></div>
+          <div id="typing-cursor" class="typing-cursor">▌</div>
+        </div>
+
+        <!-- ───────────────────────────────────
+             CHOICES PANEL
+             ─────────────────────────────────── -->
+        <div id="choices-panel" class="hidden"></div>
+
+        <!-- ───────────────────────────────────
+             COMBAT PANEL (shown during fights)
+             ─────────────────────────────────── -->
+        <div id="combat-panel" class="hidden">
+          <div id="combat-enemy-block">
+            <div id="combat-enemy-name">Wolf</div>
+            <div class="combat-bar-wrap">
+              <div id="enemy-hp-fill" class="enemy-hp-fill"></div>
+            </div>
+            <div id="enemy-hp-text">35 / 35</div>
+            <div id="combat-enemy-sprite" class="enemy-sprite"></div>
+            <div id="combat-enemy-status"></div>
+          </div>
+
+          <div id="combat-log"></div>
+
+          <div id="combat-actions">
+            <button class="combat-btn" data-action="attack">⚔ ATTACK</button>
+            <button class="combat-btn" data-action="defend">🛡 DEFEND</button>
+            <button class="combat-btn" data-action="ability">✦ ABILITY</button>
+            <button class="combat-btn" data-action="item">⚗ ITEM</button>
+            <button class="combat-btn" data-action="run">↩ RUN</button>
+          </div>
+        </div>
+
+        <!-- ───────────────────────────────────
+             DAMAGE NUMBER OVERLAY
+             ─────────────────────────────────── -->
+        <div id="damage-overlay"></div>
+
+        <!-- ───────────────────────────────────
+             NOTIFICATION TOAST
+             ─────────────────────────────────── -->
+        <div id="toast-container"></div>
+
+      </main>
+
+      <!-- ═══════════════════════════════
+           BOTTOM CONTROL BAR
+           ═══════════════════════════════ -->
+      <footer id="control-bar">
+        <div class="control-group">
+          <div class="ctrl-key-group">
+            <span class="ctrl-key">W</span>
+            <div class="ctrl-key-row">
+              <span class="ctrl-key">A</span>
+              <span class="ctrl-key">S</span>
+              <span class="ctrl-key">D</span>
+            </div>
+          </div>
+          <span class="ctrl-label">MOVE</span>
+        </div>
+
+        <div class="control-separator"></div>
+
+        <div class="control-group">
+          <span class="ctrl-key">SPACE</span>
+          <span class="ctrl-label">INTERACT</span>
+        </div>
+
+        <div class="control-separator"></div>
+
+        <div class="control-group">
+          <span class="ctrl-key">I</span>
+          <span class="ctrl-label">INVENTORY</span>
+        </div>
+
+        <div class="control-separator"></div>
+
+        <div class="control-group">
+          <span class="ctrl-key">E</span>
+          <span class="ctrl-label">ABILITIES</span>
+        </div>
+
+        <div class="control-separator"></div>
+
+        <div class="control-group">
+          <span class="ctrl-key">Q</span>
+          <span class="ctrl-label">QUESTS</span>
+        </div>
+
+        <div class="control-separator"></div>
+
+        <div class="control-group">
+          <span class="ctrl-key">ESC</span>
+          <span class="ctrl-label">CLOSE</span>
+        </div>
+
+        <!-- Act indicator -->
+        <div id="act-indicator">
+          <span id="act-text">ACT I · THE WOODS</span>
+        </div>
+      </footer>
+
+    </div><!-- /game-wrapper -->
+
+  </div><!-- /outer-frame -->
+
+  <!-- ══════════════════════════════════════════════
+       OVERLAY MODALS (Inventory, Abilities, Quests, Confirm)
+       ══════════════════════════════════════════════ -->
+
+  <!-- INVENTORY MODAL -->
+  <div id="modal-inventory" class="modal hidden" role="dialog" aria-label="Inventory">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <span class="modal-title">INVENTORY</span>
+        <span class="modal-subtitle" id="inv-gold-display">◈ 0 Gold</span>
+        <button class="modal-close" data-close="modal-inventory">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="inv-grid" class="inv-grid"></div>
+        <div id="inv-detail" class="inv-detail">
+          <div id="inv-detail-name"></div>
+          <div id="inv-detail-type"></div>
+          <div id="inv-detail-stats"></div>
+          <div id="inv-detail-desc"></div>
+          <div id="inv-detail-actions"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="trash-area" id="trash-drop" title="Discard item">
+          <span class="trash-icon">🗑</span>
+          <span class="trash-label">DISCARD</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABILITIES MODAL -->
+  <div id="modal-abilities" class="modal hidden" role="dialog" aria-label="Abilities">
+    <div class="modal-panel ability-panel">
+      <div class="modal-header">
+        <span class="modal-title">WEAPON ARTS</span>
+        <button class="modal-close" data-close="modal-abilities">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="ability-slots" class="ability-slots">
+          <!-- 3 slots rendered by abilities.js -->
+        </div>
+        <div class="ability-separator"></div>
+        <div id="ability-pool" class="ability-pool">
+          <!-- Unlocked abilities available to equip -->
+        </div>
+      </div>
+      <div class="modal-footer ability-footer">
+        <span class="ability-hint">Click an unlocked ability to equip it into a slot.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTS MODAL -->
+  <div id="modal-quests" class="modal hidden" role="dialog" aria-label="Quests">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <span class="modal-title">QUEST LOG</span>
+        <button class="modal-close" data-close="modal-quests">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="quest-tabs" class="quest-tabs">
+          <button class="quest-tab active" data-tab="active">ACTIVE</button>
+          <button class="quest-tab" data-tab="completed">COMPLETED</button>
+        </div>
+        <div id="quest-list" class="quest-list"></div>
+        <div id="quest-detail" class="quest-detail"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION DIALOG -->
+  <div id="modal-confirm" class="modal hidden" role="dialog" aria-label="Confirm">
+    <div class="modal-panel confirm-panel">
+      <div class="modal-header">
+        <span class="modal-title" id="confirm-title">CONFIRM</span>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message"></p>
+      </div>
+      <div class="modal-footer confirm-footer">
+        <button class="confirm-btn yes" id="confirm-yes">YES</button>
+        <button class="confirm-btn no"  id="confirm-no">NO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MERCHANT MODAL -->
+  <div id="modal-merchant" class="modal hidden" role="dialog" aria-label="Merchant">
+    <div class="modal-panel merchant-panel">
+      <div class="modal-header">
+        <span class="modal-title" id="merchant-name">MERCHANT</span>
+        <button class="modal-close" data-close="modal-merchant">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="merchant-intro" class="merchant-intro"></div>
+        <div class="merchant-columns">
+          <div class="merchant-col">
+            <div class="merchant-col-title">FOR SALE</div>
+            <div id="merchant-stock" class="merchant-list"></div>
+          </div>
+          <div class="merchant-col">
+            <div class="merchant-col-title">YOUR ITEMS</div>
+            <div id="merchant-player-inv" class="merchant-list"></div>
+          </div>
+        </div>
+        <div id="merchant-detail" class="merchant-detail"></div>
+      </div>
+      <div class="modal-footer">
+        <span class="merchant-gold">◈ <span id="merchant-gold-display">0</span> Gold</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TITLE SCREEN -->
+  <div id="title-screen">
+    <div id="title-fog"></div>
+    <div id="title-content">
+      <div id="title-logo">
+        <div id="title-main">PERIVAL</div>
+        <div id="title-colon">:</div>
+        <div id="title-sub">THE ASHEN KEEP</div>
+      </div>
+      <div id="title-tagline">"The chains did not hold. They never do."</div>
+      <div id="title-buttons">
+        <button class="title-btn" id="title-new">NEW GAME</button>
+        <button class="title-btn" id="title-load">CONTINUE</button>
+      </div>
+      <div id="title-version">v1.0 — STAGE I</div>
+    </div>
+  </div>
+
+  <!-- Main game bootstrap -->
+  <script type="module" src="game.js"></script>
+</body>
+</html>
+
