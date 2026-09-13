@@ -95,7 +95,7 @@ function setupKeyboard() {
       /* ── SPACE: interact / advance ── */
       case ' ':
         e.preventDefault();
-        if (mode === 'explore') {
+        if (mode === 'explore' || mode === 'dialogue') {
           // Advance: try to click the first choice
           const firstChoice = document.querySelector('.choice-btn');
           if (firstChoice) firstChoice.click();
@@ -128,31 +128,16 @@ function setupKeyboard() {
         });
         break;
 
-      /* ── W/A/S/D: navigation shortcuts ── */
-      case 'w':
-      case 'd':
-        // Move forward — click first "→" choice
-        if (mode === 'explore') {
-          const choices = [...document.querySelectorAll('.choice-btn')];
-          const forward = choices.find(b => b.textContent.includes('→') || b.textContent.includes('Continue') || b.textContent.includes('east'));
-          if (forward) forward.click();
-        }
-        break;
-
-      case 's':
-      case 'a':
-        // Move backward — click first "←" choice
-        if (mode === 'explore') {
-          const choices = [...document.querySelectorAll('.choice-btn')];
-          const back = choices.find(b => b.textContent.includes('←') || b.textContent.includes('back') || b.textContent.includes('Back'));
-          if (back) back.click();
-        }
-        break;
-
-      /* ── Number keys 1/2/3: select choices ── */
+      /* ── Number keys 1–9: select choices ── */
       case '1':
       case '2':
-      case '3': {
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9': {
         const idx = parseInt(key) - 1;
         const choices = [...document.querySelectorAll('.choice-btn')];
         if (choices[idx]) choices[idx].click();

@@ -1504,6 +1504,21 @@ p:last-child { margin-bottom: 0; }
 
 .merchant-btn.buy:hover  { border-color: var(--col-gold); color: var(--col-gold-bright); background: rgba(138,111,46,0.1); }
 .merchant-btn.sell:hover { border-color: #4a8aaa; color: #6aaacc; background: rgba(74,138,170,0.08); }
+.merchant-btn.leave {
+  cursor: pointer;
+  border-color: var(--col-border-bright);
+}
+.merchant-btn.leave:hover {
+  border-color: var(--col-gold-bright);
+  color: var(--col-gold-bright);
+  background: rgba(138,111,46,0.15);
+}
+
+.merchant-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
 .merchant-gold {
   font-family: var(--font-ui);

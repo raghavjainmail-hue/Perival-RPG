@@ -63,8 +63,10 @@ function showNode(tree, nodeId) {
   const choices = buildChoices(tree, node);
 
   if (choices.length === 0) {
-    // Auto-advance or end
-    setTimeout(endDialogue, 1200);
+    showChoices([{
+      label: '[ Continue ]',
+      action: endDialogue,
+    }]);
   } else {
     showChoices(choices);
   }

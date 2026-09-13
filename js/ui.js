@@ -205,7 +205,16 @@ export function showChoices(choices) {
   panel.innerHTML = '';
   panel.classList.remove('hidden');
 
-  choices.forEach(choice => {
+  const validChoices = (Array.isArray(choices) && choices.length > 0)
+    ? choices
+    : [{
+        label: '[ Continue ]',
+        action: () => {
+          import('./world.js').then(w => w.navigate(STATE.location || 'forest_entrance'));
+        },
+      }];
+
+  validChoices.forEach(choice => {
     const btn = document.createElement('button');
     btn.className   = 'choice-btn';
     btn.textContent = choice.label;
@@ -347,11 +356,24 @@ export function closeModal(id) {
   // Only reset mode if no other modal is open
   const anyOpen = document.querySelectorAll('.modal:not(.hidden)').length > 0;
   if (!anyOpen) STATE.mode = 'explore';
+
+  if (id === 'modal-merchant' && typeof window._onMerchantClose === 'function') {
+    const cb = window._onMerchantClose;
+    window._onMerchantClose = null;
+    cb();
+  }
 }
 
 export function closeAllModals() {
+  const wasMerchantOpen = !document.getElementById('modal-merchant')?.classList.contains('hidden');
   document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
   STATE.mode = 'explore';
+
+  if (wasMerchantOpen && typeof window._onMerchantClose === 'function') {
+    const cb = window._onMerchantClose;
+    window._onMerchantClose = null;
+    cb();
+  }
 }
 
 /** Show a confirmation dialog. Returns a promise resolving to true/false. */

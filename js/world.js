@@ -10,7 +10,7 @@
  * - Special events
  */
 
-import { STATE, setFlag, getFlag, addItem, hasItem, addGold, spendGold } from './state.js';
+import { STATE, setFlag, getFlag, addItem, removeItem, hasItem, addGold, spendGold } from './state.js';
 import { showNarration, showChoices, showTextImmediate, appendText,
          setScene, hideChoices, showToast, openModal, closeModal,
          updateHUD, updateActLabel } from './ui.js';
@@ -99,10 +99,18 @@ const LOCATIONS = {
         label: '→ Investigate the sound',
         action: () => {
           if (!hasWolfFought) {
-            triggerWolfCombat();
+            const enemy = spawnEnemy('forest_wolf');
+            startCombat(enemy,
+              () => { setFlag('wolfDefeated', true); navigate('deep_forest'); },
+              () => onPlayerDeath()
+            );
           } else {
             showTextImmediate([{ text: 'You find a few wolf tracks and old blood. The wolf is gone.', cls: 'text-narration' }]);
-            showForestNavChoices();
+            showChoices([
+              { label: '→ Keep moving east (toward the settlement)', action: () => navigate('settlement_road') },
+              ...(!getFlag('ruinsExplored') ? [{ label: '→ Detour south (you see a broken wall through the trees)', action: () => navigate('forest_ruins') }] : []),
+              { label: '← Head back', action: () => navigate('forest_entrance') },
+            ]);
           }
         },
       },
@@ -178,10 +186,10 @@ const LOCATIONS = {
             { text: 'Old coins. Stamped with a dragon crest you don\'t recognize.', cls: 'text-narration' },
             { text: 'Someone passed through here before you.', cls: 'text-narration' },
           ]);
-          setTimeout(() => showChoices([
-            { label: '→ Cross the stream', action: () => navigate('deep_forest') },
-            { label: '← Head back', action: () => navigate('forest_entrance') },
-          ]), 1200);
+          showChoices([
+            { label: '→ Cross the stream (continue east)', action: () => navigate('deep_forest') },
+            { label: '← Head back west', action: () => navigate('forest_entrance') },
+          ]);
         },
       });
     }
@@ -354,6 +362,7 @@ const LOCATIONS = {
     showChoices([
       { label: 'Speak to the hooded stranger', action: () => startDialogue(ALL_NPCS.ravens_agent.dialogue, () => navigate('castle_road')) },
       { label: '→ Continue to the castle', action: () => navigate('castle_road') },
+      { label: '← Back to Millhaven', action: () => navigate('millhaven') },
     ]);
   },
 
@@ -484,7 +493,7 @@ const LOCATIONS = {
               completeObjective('enter_the_keep', 'find_entry');
               completeObjective('enter_the_keep', 'enter_castle');
               showToast('You\'re inside. Disguise active.', 'success');
-              setTimeout(() => navigate('castle_courtyard'), 1200);
+              showChoices([{ label: '→ Enter the courtyard', action: () => navigate('castle_courtyard') }]);
             } else {
               appendText('GUARD: "Hold on. You\'re not from the regular detail."', 'text-dialogue');
               appendText('He reaches for his horn.', 'text-narration');
@@ -494,7 +503,7 @@ const LOCATIONS = {
                   STATE.disguise = null;
                   navigate('castle_exterior');
                 }, () => onPlayerDeath());
-              }, 900);
+              }, 300);
             }
           },
         },
@@ -508,7 +517,7 @@ const LOCATIONS = {
             completeObjective('enter_the_keep', 'find_entry');
             completeObjective('enter_the_keep', 'enter_castle');
             showToast('You\'re inside. Disguise active.', 'success');
-            setTimeout(() => navigate('castle_courtyard'), 1200);
+            showChoices([{ label: '→ Enter the courtyard', action: () => navigate('castle_courtyard') }]);
           },
         },
         { label: '← Back', action: () => navigate('castle_exterior') },
@@ -538,7 +547,7 @@ const LOCATIONS = {
       completeObjective('harlin_job', 'enter_trade_gate');
       completeQuest('harlin_job');
       showToast('Entered the castle through the trade yard.', 'success');
-      setTimeout(() => navigate('castle_courtyard'), 1200);
+      showChoices([{ label: '→ Enter the courtyard', action: () => navigate('castle_courtyard') }]);
     });
   },
 
@@ -594,7 +603,7 @@ const LOCATIONS = {
             appendText('MORDIS: "Research. Understanding what\'s beneath this castle. Something nobody else has tried."', 'text-dialogue');
             appendText('MORDIS: "The dragon isn\'t a monster. It\'s a source. If I can harvest its essence—"', 'text-dialogue');
             appendText('He stops. Realizes he\'s said too much.', 'text-narration');
-            setTimeout(() => showMordisDecision(), 1500);
+            showMordisDecision();
           },
         },
         {
@@ -712,15 +721,15 @@ const LOCATIONS = {
               appendText('EDRAN: "It shows them power. Gives them resources. In exchange for what it needs."', 'text-dialogue');
               appendText('EDRAN: "Freedom."', 'text-important');
               appendText('EDRAN: "The chains won\'t hold much longer. Nothing will, if Mordis continues his work. The dragon grows stronger each day."', 'text-dialogue');
-              import('./state.js').then(({ removeItem }) => removeItem('aldric_note'));
+              removeItem('aldric_note');
               setFlag('edranFound', true);
               completeObjective('the_wanderer', 'find_edran');
               completeObjective('the_wanderer', 'deliver_note');
               completeQuest('the_wanderer');
-              setTimeout(() => showChoices([
+              showChoices([
                 { label: '→ Continue deeper', action: () => navigate('leviora_approach') },
                 { label: '← Back', action: () => navigate('dungeon_deep') },
-              ]), 2000);
+              ]);
             } else {
               appendText('PERIVAL: "I... had something. I don\'t have it now."', 'text-player');
               appendText('EDRAN: "Then come back when you do."', 'text-dialogue');
@@ -736,6 +745,7 @@ const LOCATIONS = {
             appendText('EDRAN: "And you have to do it before the chains give."', 'text-dialogue');
             showChoices([
               { label: '→ Continue deeper', action: () => navigate('leviora_approach') },
+              { label: '← Back', action: () => navigate('dungeon_deep') },
             ]);
           },
         },
@@ -890,7 +900,7 @@ function showRuinsChoices() {
             { text: 'Under a collapsed arch, wrapped in cloth: a silver locket. A child\'s face painted inside.', cls: 'text-narration' },
             { text: 'It shouldn\'t be here.', cls: 'text-narration' },
           ]);
-          setTimeout(() => showRuinsChoices(), 1500);
+          showRuinsChoices();
         } else {
           showTextImmediate([{ text: 'You\'ve already searched the rubble. Nothing remains.', cls: 'text-narration' }]);
           showRuinsChoices();
@@ -905,7 +915,7 @@ function showRuinsChoices() {
           { text: 'There are runes scratched into the base. Old. Very old.', cls: 'text-narration' },
           { text: 'You don\'t recognize the language.', cls: 'text-narration' },
         ]);
-        setTimeout(() => showRuinsChoices(), 1500);
+        showRuinsChoices();
       },
     },
   ];
@@ -932,7 +942,7 @@ function showRuinsChoices() {
             },
             () => onPlayerDeath()
           );
-        }, 800);
+        }, 300);
       },
     });
   } else if (!getFlag('harlinCrateFound')) {
@@ -944,7 +954,7 @@ function showRuinsChoices() {
         completeObjective('harlin_crate', 'find_crate');
         showToast("Found: Harlin's cargo crate.", 'gold');
         showTextImmediate([{ text: 'A crate with a merchant\'s seal. This must be Harlin\'s.', cls: 'text-narration' }]);
-        setTimeout(() => showRuinsChoices(), 1500);
+        showRuinsChoices();
       },
     });
   }
@@ -960,7 +970,7 @@ function showMillhavenChoices() {
       action: () => startDialogue(ALL_NPCS.old_miller.dialogue, () => navigate('millhaven')),
     },
     {
-      label: '→ Find Harlin the merchant',
+      label: '→ Speak with Harlin the merchant',
       action: () => {
         if (getFlag('harlinCrateFound')) {
           completeObjective('harlin_crate', 'report_back');
@@ -969,8 +979,19 @@ function showMillhavenChoices() {
         showNarration([
           { text: 'Harlin\'s wagon is parked at the edge of the village square.', cls: 'text-narration' },
         ], () => startDialogue(ALL_NPCS.harlin.dialogue, () => {
-          openMerchant('harlin');
+          if (getFlag('openShopAfterDialogue')) {
+            setFlag('openShopAfterDialogue', false);
+            openMerchant('harlin', () => navigate('millhaven'));
+          } else {
+            navigate('millhaven');
+          }
         }));
+      },
+    },
+    {
+      label: '→ Trade with Harlin (Open Shop)',
+      action: () => {
+        openMerchant('harlin', () => navigate('millhaven'));
       },
     },
     {
@@ -997,7 +1018,7 @@ function showMillhavenChoices() {
             showChoices([{
               label: '"I found this in the ruins—"',
               action: () => {
-                import('./state.js').then(({ removeItem }) => removeItem('silver_locket'));
+                removeItem('silver_locket');
                 appendText('PERIVAL: "I found this. Near the old ruins."', 'text-player');
                 appendText('She breaks when she sees it. Not falls — breaks. Like something inside stops working.', 'text-narration');
                 appendText('MIREN: "He always wore this."', 'text-dialogue');
@@ -1050,7 +1071,7 @@ function showCastleCourtyard() {
           { text: 'CASTLE MERCHANT:', cls: 'text-speaker' },
           { text: '"Quiet. Not here, not loudly. But I can sell you some things."', cls: 'text-dialogue' },
         ]);
-        openMerchant('harlin');
+        openMerchant('harlin', () => navigate('castle_courtyard'));
       },
     },
     {
@@ -1104,22 +1125,51 @@ function showMordisDecision() {
    MERCHANT SYSTEM
    ══════════════════════════════════════════════════════════════════════════ */
 
-function openMerchant(merchantId) {
+let _onMerchantClose = null;
+
+export function openMerchant(merchantId, onClose) {
+  _onMerchantClose = onClose || (() => navigate(STATE.location || 'millhaven'));
+  window._onMerchantClose = _onMerchantClose;
+
   const stock = MERCHANT_STOCK[merchantId] ?? [];
   const nameMap = { harlin: 'HARLIN — Traveling Merchant' };
 
-  document.getElementById('merchant-name').textContent = nameMap[merchantId] || 'MERCHANT';
-  document.getElementById('merchant-intro').textContent =
-    '"See anything you like?" Harlin keeps his voice low.';
+  const nameEl = document.getElementById('merchant-name');
+  if (nameEl) nameEl.textContent = nameMap[merchantId] || 'MERCHANT';
 
-  renderMerchantStock(stock);
+  const introEl = document.getElementById('merchant-intro');
+  if (introEl) introEl.textContent = '"See anything you like?" Harlin keeps his voice low.';
+
+  renderMerchantStock(stock, merchantId);
   renderMerchantPlayerInv(merchantId);
 
-  document.getElementById('merchant-gold-display').textContent = STATE.player.gold;
+  const goldEl = document.getElementById('merchant-gold-display');
+  if (goldEl) goldEl.textContent = STATE.player.gold;
+
+  const detailEl = document.getElementById('merchant-detail');
+  if (detailEl) detailEl.innerHTML = '<div style="color:var(--col-text-faint);font-style:italic;padding:8px;">Select an item to inspect, buy, or sell. Click LEAVE to return.</div>';
+
   openModal('modal-merchant');
 }
 
-function renderMerchantStock(stock) {
+export function closeMerchant() {
+  closeModal('modal-merchant');
+  if (_onMerchantClose) {
+    const cb = _onMerchantClose;
+    _onMerchantClose = null;
+    window._onMerchantClose = null;
+    cb();
+  }
+}
+
+// Wire leave button
+if (typeof document !== 'undefined') {
+  document.getElementById('merchant-leave-btn')?.addEventListener('click', () => {
+    closeMerchant();
+  });
+}
+
+function renderMerchantStock(stock, merchantId) {
   const listEl = document.getElementById('merchant-stock');
   if (!listEl) return;
   listEl.innerHTML = '';
@@ -1138,14 +1188,14 @@ function renderMerchantStock(stock) {
     row.addEventListener('click', () => {
       document.querySelectorAll('#merchant-stock .merchant-item').forEach(r => r.classList.remove('selected'));
       row.classList.add('selected');
-      showMerchantDetail(it, entry.buyPrice, 'buy');
+      showMerchantDetail(it, entry.buyPrice, 'buy', merchantId);
     });
 
     listEl.appendChild(row);
   });
 }
 
-function showMerchantDetail(item, price, mode) {
+function showMerchantDetail(item, price, mode, merchantId) {
   const detailEl = document.getElementById('merchant-detail');
   if (!detailEl) return;
 
@@ -1158,18 +1208,18 @@ function showMerchantDetail(item, price, mode) {
 
   if (mode === 'buy') {
     document.getElementById('buy-btn')?.addEventListener('click', () => {
-      import('./state.js').then(({ spendGold }) => {
-        const success = spendGold(price);
-        if (!success) {
-          showToast('Not enough gold.', 'danger');
-          return;
-        }
-        addItem(item.id, 1);
-        updateHUD();
-        showToast(`Bought ${item.name} for ${price} gold.`, 'gold');
-        document.getElementById('merchant-gold-display').textContent = STATE.player.gold;
-        setFlag('boughtFromMerchant', true);
-      });
+      const success = spendGold(price);
+      if (!success) {
+        showToast('Not enough gold.', 'danger');
+        return;
+      }
+      addItem(item.id, 1);
+      updateHUD();
+      showToast(`Bought ${item.name} for ${price} gold.`, 'gold');
+      const goldEl = document.getElementById('merchant-gold-display');
+      if (goldEl) goldEl.textContent = STATE.player.gold;
+      setFlag('boughtFromMerchant', true);
+      renderMerchantPlayerInv(merchantId);
     });
   }
 }

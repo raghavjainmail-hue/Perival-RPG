@@ -412,7 +412,7 @@ export const HARLIN = {
         "Keeps me fed. What can I get you?",
       ],
       choices: [
-        { label: '"Open shop."', next: 'end' }, // triggers merchant modal in world.js
+        { label: '"Open shop."', next: 'end', onSelect: () => setFlag('openShopAfterDialogue', true) },
         {
           label: '"About the castle — can you help me get in?"',
           playerLine: 'PERIVAL: "The Keep. Can you get me inside?"',

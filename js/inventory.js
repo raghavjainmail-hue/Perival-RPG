@@ -269,18 +269,18 @@ export function renderMerchantPlayerInv(merchantId) {
       <span class="merchant-item-icon">${item.icon}</span>
       <span class="merchant-item-name">${item.name} ${slot.qty > 1 ? `×${slot.qty}` : ''}</span>
       <span class="merchant-item-price">${item.sellPrice}g</span>`;
-    row.addEventListener('click', () => selectMerchantSellItem(item, slot));
+    row.addEventListener('click', (e) => selectMerchantSellItem(e, item, slot));
     listEl.appendChild(row);
   });
 }
 
-function selectMerchantSellItem(item, slot) {
+function selectMerchantSellItem(e, item, slot) {
   const detailEl  = document.getElementById('merchant-detail');
   if (!detailEl) return;
 
   document.querySelectorAll('#merchant-player-inv .merchant-item')
     .forEach(r => r.classList.remove('selected'));
-  event.currentTarget?.classList.add('selected');
+  e.currentTarget?.classList.add('selected');
 
   detailEl.innerHTML = `
     <div class="merchant-detail-name">${item.icon} ${item.name}</div>
@@ -294,10 +294,13 @@ function selectMerchantSellItem(item, slot) {
       removeItem(item.id, 1);
       addGold(item.sellPrice);
       updateHUD();
+      const goldDisplay = document.getElementById('merchant-gold-display');
+      if (goldDisplay) goldDisplay.textContent = STATE.player.gold;
       import('./ui.js').then(ui => {
         ui.showToast(`Sold ${item.name} for ${item.sellPrice} gold.`, 'gold');
         ui.updateHUD();
       });
+      detailEl.innerHTML = '<div style="color:var(--col-text-faint);font-style:italic;padding:8px;">Item sold.</div>';
       renderMerchantPlayerInv();
     });
   });
